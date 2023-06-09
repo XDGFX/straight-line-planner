@@ -192,11 +192,11 @@
                         LINE_COORDS[0][1]
                     );
 
+                    const distanceToFinish = TOTAL_DISTANCE - distanceToStart;
+
                     // Compute the distance covered as a fraction of the
                     // total distance
                     const fraction = distanceToStart / TOTAL_DISTANCE;
-
-                    const distanceToFinish = TOTAL_DISTANCE * (1 - fraction);
 
                     // Estimate the nearest point on the line using this
                     // fraction
