@@ -23,12 +23,19 @@
 
             <!-- Line coordinates -->
             <div id="lineCoords"></div>
+
             <!-- Current position -->
             <div id="currentPosition">Getting current position...</div>
+
             <!-- Arrow pointing towards nearest line intersection -->
             <div id="arrow" style="display: contents">...</div>
+
             <!-- Stats about distance to nearest line intersection -->
             <div id="stats"></div>
+
+            <!-- Orientation -->
+            <div id="orientation"></div>
+
             <!-- Reference -->
             <div>
                 ±25m - Platinum<br />
@@ -165,11 +172,12 @@
 
                 const ARROW_HTML = "&#8593;";
 
+                let heading = 0;
+
                 // Get current position
                 navigator.geolocation.watchPosition(
                     (position) => {
-                        const { latitude, longitude, heading } =
-                            position.coords;
+                        const { latitude, longitude } = position.coords;
 
                         currentPosition.innerHTML = `Current position: ${latitude}, ${longitude}`;
 
@@ -248,9 +256,23 @@
                     },
                     (error) => {
                         console.log(error);
-                    },
-                    {
-                        enableHighAccuracy: true,
+                    }
+                    // {
+                    //     enableHighAccuracy: true,
+                    // }
+                );
+
+                // Get compass heading
+                window.addEventListener(
+                    "deviceorientationabsolute",
+                    (event) => {
+                        // console.log(event);
+                        // if (event.absolute === true && event.alpha !== null) {
+                        //     heading = event.webkitCompassHeading || event.alpha;
+                        // }
+                        document.getElementById(
+                            "orientation"
+                        ).innerHTML = `Orientation: ${event}°`;
                     }
                 );
             </script>
