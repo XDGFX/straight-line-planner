@@ -168,7 +168,8 @@
                 // Get current position
                 navigator.geolocation.watchPosition(
                     (position) => {
-                        const { latitude, longitude } = position.coords;
+                        const { latitude, longitude, heading } =
+                            position.coords;
 
                         currentPosition.innerHTML = `Current position: ${latitude}, ${longitude}`;
 
@@ -233,11 +234,15 @@
                             2
                         )}°<br />Bearing to finish: ${bearingToEndPoint.toFixed(
                             2
-                        )}°`;
+                        )}°<br />Current heading: ${heading.toFixed(2)}°`;
 
                         // Update the arrow
-                        arrow.innerHTML = `<div>Direction to line: </div><div style="transform: rotate(${bearingToNearestPoint}deg); font-size:2em;">${ARROW_HTML}</div>
-                        <br /><div>Direction to finish: </div><div style="transform: rotate(${bearingToEndPoint}deg); font-size:2em;">${ARROW_HTML}</div>`;
+                        arrow.innerHTML = `<div>Direction to line: </div><div style="transform: rotate(${
+                            bearingToNearestPoint - heading
+                        }deg); font-size:2em;">${ARROW_HTML}</div>
+                        <br /><div>Direction to finish: </div><div style="transform: rotate(${
+                            bearingToEndPoint - heading
+                        }deg); font-size:2em;">${ARROW_HTML}</div>`;
                     },
                     (error) => {
                         console.log(error);
