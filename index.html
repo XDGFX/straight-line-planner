@@ -196,6 +196,8 @@
                     // total distance
                     const fraction = distanceToStart / TOTAL_DISTANCE;
 
+                    const distanceToFinish = TOTAL_DISTANCE * (1 - fraction);
+
                     // Estimate the nearest point on the line using this
                     // fraction
                     const nearestPoint = intermediatePoint(
@@ -241,7 +243,9 @@
                     )}, ${nearestPoint[1].toFixed(4)}
                         <br />Bearing to line normal: ${bearingToNearestPoint.toFixed(
                             2
-                        )}°<br />Bearing to finish: ${bearingToEndPoint.toFixed(
+                        )}°<br />Distance to finish: ${distanceToFinish.toFixed(
+                        2
+                    )}m<br />Bearing to finish: ${bearingToEndPoint.toFixed(
                         2
                     )}°`;
 
