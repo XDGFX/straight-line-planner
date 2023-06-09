@@ -266,13 +266,9 @@
                 window.addEventListener(
                     "deviceorientationabsolute",
                     (event) => {
-                        // console.log(event);
-                        // if (event.absolute === true && event.alpha !== null) {
-                        //     heading = event.webkitCompassHeading || event.alpha;
-                        // }
-                        document.getElementById(
-                            "orientation"
-                        ).innerHTML = `Orientation: ${event}°`;
+                        if (event.absolute === true && event.alpha !== null) {
+                            heading = event.webkitCompassHeading || event.alpha;
+                        }
                     }
                 );
             </script>
