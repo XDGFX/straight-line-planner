@@ -234,14 +234,16 @@
                             2
                         )}°<br />Bearing to finish: ${bearingToEndPoint.toFixed(
                             2
-                        )}°<br />Current heading: ${heading.toFixed(2)}°`;
+                        )}°<br />Current heading: ${(heading || 0).toFixed(
+                            2
+                        )}°`;
 
                         // Update the arrow
                         arrow.innerHTML = `<div>Direction to line: </div><div style="transform: rotate(${
-                            bearingToNearestPoint - heading
+                            bearingToNearestPoint - heading || 0
                         }deg); font-size:2em;">${ARROW_HTML}</div>
                         <br /><div>Direction to finish: </div><div style="transform: rotate(${
-                            bearingToEndPoint - heading
+                            bearingToEndPoint - heading || 0
                         }deg); font-size:2em;">${ARROW_HTML}</div>`;
                     },
                     (error) => {
