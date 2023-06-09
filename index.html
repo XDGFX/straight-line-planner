@@ -247,10 +247,10 @@
 
                     // Update the arrow
                     arrow.innerHTML = `<div>Direction to line: </div><div style="transform: rotate(${
-                        bearingToNearestPoint - heading || 0
+                        bearingToNearestPoint + heading || 0
                     }deg); font-size:2em;">${ARROW_HTML}</div>
                         <br /><div>Direction to finish: </div><div style="transform: rotate(${
-                            bearingToEndPoint - heading || 0
+                            bearingToEndPoint + heading || 0
                         }deg); font-size:2em;">${ARROW_HTML}</div>`;
                 };
 
