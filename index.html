@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Straight Line Planner</title>
+    </head>
+
+    <body>
+        <!-- Everything centred vertically and horizontally -->
+        <div
+            style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                width: 100vw;
+                flex-direction: column;
+                gap: 1rem;
+            "
+        >
+            <!-- Title -->
+            <h1>Straight Line Planner</h1>
+
+            <!-- Line coordinates -->
+            <div id="lineCoords"></div>
+            <!-- Current position -->
+            <div id="currentPosition">Getting current position...</div>
+            <!-- Arrow pointing towards nearest line intersection -->
+            <div id="arrow" style="display: contents">...</div>
+            <!-- Stats about distance to nearest line intersection -->
+            <div id="stats"></div>
+            <!-- Reference -->
+            <div>
+                ±25m - Platinum<br />
+                ±50m - Gold<br />
+                ±75m - Silver<br />
+                ±100m - Bronze
+            </div>
+
+            <script>
+                const LINE_COORDS = [
+                    [49.83368868129337, 5.7401520369977455],
+                    [49.898531544256706, 6.236627857520923],
+                ];
+
+                const currentPosition =
+                    document.getElementById("currentPosition");
+                const lineCoords = document.getElementById("lineCoords");
+                const arrow = document.getElementById("arrow");
+
+                lineCoords.innerHTML = `Line coordinates: ${LINE_COORDS[0][0].toFixed(
+                    4
+                )}, ${LINE_COORDS[0][1].toFixed(
+                    4
+                )} to ${LINE_COORDS[1][0].toFixed(
+                    4
+                )}, ${LINE_COORDS[1][1].toFixed(4)}`;
+
+                /**
+                 * Haversine distance between two points
+                 * @param {number} lat1 Latitude of first point
+                 * @param {number} lat2 Latitude of second point
+                 * @param {number} lon1 Longitude of first point
+                 * @param {number} lon2 Longitude of second point
+                 * @returns {number} Distance between two points
+                 */
+                function distBetween(lat1, lat2, lon1, lon2) {
+                    const R = 6371e3; // Metres
+                    const φ1 = (lat1 * Math.PI) / 180; // φ, λ in radians
+                    const φ2 = (lat2 * Math.PI) / 180;
+                    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+                    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+                    const a =
+                        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                        Math.cos(φ1) *
+                            Math.cos(φ2) *
+                            Math.sin(Δλ / 2) *
+                            Math.sin(Δλ / 2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+                    return R * c; // Metres
+                }
+
+                /**
+                 * Intermediate points between two points
+                 * @param {number} lat1 Latitude of first point
+                 * @param {number} lat2 Latitude of second point
+                 * @param {number} lon1 Longitude of first point
+                 * @param {number} lon2 Longitude of second point
+                 * @param {number} f Ratio of distance between first and second point
+                 * @returns {number[]} Intermediate point
+                 */
+                function intermediatePoint(lat1, lat2, lon1, lon2, fraction) {
+                    const φ1 = (lat1 * Math.PI) / 180; // φ, λ in radians
+                    const φ2 = (lat2 * Math.PI) / 180;
+                    const λ1 = (lon1 * Math.PI) / 180;
+                    const λ2 = (lon2 * Math.PI) / 180;
+
+                    // distance between points
+                    const Δφ = φ2 - φ1;
+                    const Δλ = λ2 - λ1;
+                    const a =
+                        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                        Math.cos(φ1) *
+                            Math.cos(φ2) *
+                            Math.sin(Δλ / 2) *
+                            Math.sin(Δλ / 2);
+                    const δ = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+                    const A = Math.sin((1 - fraction) * δ) / Math.sin(δ);
+                    const B = Math.sin(fraction * δ) / Math.sin(δ);
+
+                    const x =
+                        A * Math.cos(φ1) * Math.cos(λ1) +
+                        B * Math.cos(φ2) * Math.cos(λ2);
+                    const y =
+                        A * Math.cos(φ1) * Math.sin(λ1) +
+                        B * Math.cos(φ2) * Math.sin(λ2);
+                    const z = A * Math.sin(φ1) + B * Math.sin(φ2);
+
+                    const φ3 = Math.atan2(z, Math.sqrt(x * x + y * y));
+                    const λ3 = Math.atan2(y, x);
+
+                    // Convert back to degrees
+                    // const lat = φ3.toDegrees();
+                    // const lon = λ3.toDegrees();
+                    const lat = (φ3 * 180) / Math.PI;
+                    const lon = (λ3 * 180) / Math.PI;
+
+                    return [lat, lon];
+                }
+
+                /**
+                 * Compute the bearing from one point to another
+                 * @param {number} lat1 Latitude of first point
+                 * @param {number} lat2 Latitude of second point
+                 * @param {number} lon1 Longitude of first point
+                 * @param {number} lon2 Longitude of second point
+                 * @returns {number} Bearing from first point to second point
+                 */
+                function bearing(lat1, lat2, lon1, lon2) {
+                    const φ1 = (lat1 * Math.PI) / 180; // φ, λ in radians
+                    const φ2 = (lat2 * Math.PI) / 180;
+                    const λ1 = (lon1 * Math.PI) / 180;
+                    const λ2 = (lon2 * Math.PI) / 180;
+
+                    const y = Math.sin(λ2 - λ1) * Math.cos(φ2);
+                    const x =
+                        Math.cos(φ1) * Math.sin(φ2) -
+                        Math.sin(φ1) * Math.cos(φ2) * Math.cos(λ2 - λ1);
+                    const θ = Math.atan2(y, x);
+
+                    // Convert back to degrees
+                    return (θ * 180) / Math.PI;
+                }
+
+                // Total distance between points
+                const TOTAL_DISTANCE = distBetween(
+                    LINE_COORDS[0][0],
+                    LINE_COORDS[1][0],
+                    LINE_COORDS[0][1],
+                    LINE_COORDS[1][1]
+                );
+
+                const ARROW_HTML = "&#8593;";
+
+                // Get current position
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+
+                        currentPosition.innerHTML = `Current position: ${latitude}, ${longitude}`;
+
+                        // Compute the distance to the start point, we will use
+                        // this to estimate the distance covered as a fraction
+                        // of the total distance
+                        const distanceToStart = distBetween(
+                            latitude,
+                            LINE_COORDS[0][0],
+                            longitude,
+                            LINE_COORDS[0][1]
+                        );
+
+                        // Compute the distance covered as a fraction of the
+                        // total distance
+                        const fraction = distanceToStart / TOTAL_DISTANCE;
+
+                        // Estimate the nearest point on the line using this
+                        // fraction
+                        const nearestPoint = intermediatePoint(
+                            LINE_COORDS[0][0],
+                            LINE_COORDS[1][0],
+                            LINE_COORDS[0][1],
+                            LINE_COORDS[1][1],
+                            fraction
+                        );
+
+                        // Compute the distance between the current position
+                        // and the nearest point on the line
+                        const distanceToNearestPoint = distBetween(
+                            latitude,
+                            nearestPoint[0],
+                            longitude,
+                            nearestPoint[1]
+                        );
+
+                        // Compute the bearing from the current position to
+                        // the nearest point on the line
+                        const bearingToNearestPoint = bearing(
+                            latitude,
+                            nearestPoint[0],
+                            longitude,
+                            nearestPoint[1]
+                        );
+
+                        // Compute the bearing from the current position to
+                        // the end point of the line
+                        const bearingToEndPoint = bearing(
+                            latitude,
+                            LINE_COORDS[1][0],
+                            longitude,
+                            LINE_COORDS[1][1]
+                        );
+
+                        // Update the stats
+                        stats.innerHTML = `Distance to line: ${distanceToNearestPoint.toFixed(
+                            2
+                        )}m<br />Closest point on line: ${nearestPoint[0].toFixed(
+                            4
+                        )}, ${nearestPoint[1].toFixed(4)}
+                        <br />Bearing to line normal: ${bearingToNearestPoint.toFixed(
+                            2
+                        )}°<br />Bearing to finish: ${bearingToEndPoint.toFixed(
+                            2
+                        )}°`;
+
+                        // Update the arrow
+                        arrow.innerHTML = `<div>Direction to line: </div><div style="transform: rotate(${bearingToNearestPoint}deg); font-size:2em;">${ARROW_HTML}</div>
+                        <br /><div>Direction to finish: </div><div style="transform: rotate(${bearingToEndPoint}deg); font-size:2em;">${ARROW_HTML}</div>`;
+                    },
+                    (error) => {
+                        console.log(error);
+                    }
+                );
+            </script>
+        </div>
+    </body>
+</html>
