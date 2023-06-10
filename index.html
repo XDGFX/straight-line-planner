@@ -181,10 +181,46 @@
                 let heading = 0;
                 let lastPosition = null;
 
+                const recentPositionHistory = [];
+                const RECENT_POSITION_HISTORY_LENGTH = 10;
+
                 const watchPositionCallback = (position) => {
                     lastPosition = position;
 
-                    const { latitude, longitude } = position.coords;
+                    // If recentPositionHistory is full, remove the oldest
+                    // position
+                    if (
+                        recentPositionHistory.length >=
+                        RECENT_POSITION_HISTORY_LENGTH
+                    ) {
+                        recentPositionHistory.shift();
+                    }
+
+                    // Add the new position to the end of the array
+                    recentPositionHistory.push(position);
+
+                    // Get the latitude and longitude as a weighted average of
+                    // the most recent positions. Weight is higher for recent
+                    // positions, and positions with lower accuracy values
+                    let latSum = 0;
+                    let lonSum = 0;
+                    let weightSum = 0;
+
+                    for (let i = 0; i < recentPositionHistory.length; i += 1) {
+                        const weight =
+                            i *
+                            (5 /
+                                (recentPositionHistory[i].coords.accuracy + 1));
+
+                        latSum +=
+                            recentPositionHistory[i].coords.latitude * weight;
+                        lonSum +=
+                            recentPositionHistory[i].coords.longitude * weight;
+                        weightSum += weight;
+                    }
+
+                    const latitude = latSum / weightSum;
+                    const longitude = lonSum / weightSum;
 
                     currentPosition.innerHTML = `Current position: ${latitude}, ${longitude}`;
 
