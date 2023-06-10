@@ -178,118 +178,135 @@
 
                 const ARROW_HTML = "&#8593;";
 
-                let heading = 0;
-                let lastPosition = null;
-
                 const recentPositionHistory = [];
                 const RECENT_POSITION_HISTORY_LENGTH = 10;
 
-                const watchPositionCallback = (position) => {
-                    lastPosition = position;
+                let heading = 0;
+                let latitude = 0;
+                let longitude = 0;
 
-                    // If recentPositionHistory is full, remove the oldest
-                    // position
-                    if (
-                        recentPositionHistory.length >=
-                        RECENT_POSITION_HISTORY_LENGTH
-                    ) {
-                        recentPositionHistory.shift();
-                    }
+                let distanceToStart = 0;
+                let distanceToFinish = 0;
+                let distanceToNearestPoint = 0;
+                let bearingToNearestPoint = 0;
+                let bearingToEndPoint = 0;
 
-                    // Add the new position to the end of the array
-                    recentPositionHistory.push(position);
+                const watchPositionCallback = (
+                    position,
+                    justUpdate = false
+                ) => {
+                    if (!justUpdate) {
+                        // If recentPositionHistory is full, remove the oldest
+                        // position
+                        if (
+                            recentPositionHistory.length >=
+                            RECENT_POSITION_HISTORY_LENGTH
+                        ) {
+                            recentPositionHistory.shift();
+                        }
 
-                    // Get the latitude and longitude as a weighted average of
-                    // the most recent positions. Weight is higher for recent
-                    // positions, and positions with lower accuracy values
-                    let latSum = 0;
-                    let lonSum = 0;
-                    let weightSum = 0;
+                        // Add the new position to the end of the array
+                        recentPositionHistory.push(position);
 
-                    for (let i = 0; i < recentPositionHistory.length; i += 1) {
-                        const weight =
-                            i *
-                            (5 /
-                                (recentPositionHistory[i].coords.accuracy + 1));
+                        // Get the latitude and longitude as a weighted average of
+                        // the most recent positions. Weight is higher for recent
+                        // positions, and positions with lower accuracy values
+                        let latSum = 0;
+                        let lonSum = 0;
+                        let weightSum = 0;
 
-                        latSum +=
-                            recentPositionHistory[i].coords.latitude * weight;
-                        lonSum +=
-                            recentPositionHistory[i].coords.longitude * weight;
-                        weightSum += weight;
-                    }
+                        for (
+                            let i = 0;
+                            i < recentPositionHistory.length;
+                            i += 1
+                        ) {
+                            const weight =
+                                i *
+                                (5 /
+                                    (recentPositionHistory[i].coords.accuracy +
+                                        1));
 
-                    const latitude = latSum / weightSum;
-                    const longitude = lonSum / weightSum;
+                            latSum +=
+                                recentPositionHistory[i].coords.latitude *
+                                weight;
+                            lonSum +=
+                                recentPositionHistory[i].coords.longitude *
+                                weight;
+                            weightSum += weight;
+                        }
 
-                    currentPosition.innerHTML = `Current position: ${latitude}, ${longitude}`;
+                        latitude = latSum / weightSum;
+                        longitude = lonSum / weightSum;
 
-                    // Compute the distance to the start point, we will use
-                    // this to estimate the distance covered as a fraction
-                    // of the total distance
-                    const distanceToStart = distBetween(
-                        latitude,
-                        LINE_COORDS[0][0],
-                        longitude,
-                        LINE_COORDS[0][1]
-                    );
+                        currentPosition.innerHTML = `Current position: ${latitude}, ${longitude}`;
 
-                    const distanceToFinish = TOTAL_DISTANCE - distanceToStart;
+                        // Compute the distance to the start point, we will use
+                        // this to estimate the distance covered as a fraction
+                        // of the total distance
+                        distanceToStart = distBetween(
+                            latitude,
+                            LINE_COORDS[0][0],
+                            longitude,
+                            LINE_COORDS[0][1]
+                        );
 
-                    // Compute the distance covered as a fraction of the
-                    // total distance
-                    const fraction = distanceToStart / TOTAL_DISTANCE;
+                        distanceToFinish = TOTAL_DISTANCE - distanceToStart;
 
-                    // Estimate the nearest point on the line using this
-                    // fraction
-                    const nearestPoint = intermediatePoint(
-                        LINE_COORDS[0][0],
-                        LINE_COORDS[1][0],
-                        LINE_COORDS[0][1],
-                        LINE_COORDS[1][1],
-                        fraction
-                    );
+                        // Compute the distance covered as a fraction of the
+                        // total distance
+                        const fraction = distanceToStart / TOTAL_DISTANCE;
 
-                    // Compute the distance between the current position
-                    // and the nearest point on the line
-                    const distanceToNearestPoint = distBetween(
-                        latitude,
-                        nearestPoint[0],
-                        longitude,
-                        nearestPoint[1]
-                    );
+                        // Estimate the nearest point on the line using this
+                        // fraction
+                        const nearestPoint = intermediatePoint(
+                            LINE_COORDS[0][0],
+                            LINE_COORDS[1][0],
+                            LINE_COORDS[0][1],
+                            LINE_COORDS[1][1],
+                            fraction
+                        );
 
-                    // Compute the bearing from the current position to
-                    // the nearest point on the line
-                    const bearingToNearestPoint = bearing(
-                        latitude,
-                        nearestPoint[0],
-                        longitude,
-                        nearestPoint[1]
-                    );
+                        // Compute the distance between the current position
+                        // and the nearest point on the line
+                        distanceToNearestPoint = distBetween(
+                            latitude,
+                            nearestPoint[0],
+                            longitude,
+                            nearestPoint[1]
+                        );
 
-                    // Compute the bearing from the current position to
-                    // the end point of the line
-                    const bearingToEndPoint = bearing(
-                        latitude,
-                        LINE_COORDS[1][0],
-                        longitude,
-                        LINE_COORDS[1][1]
-                    );
+                        // Compute the bearing from the current position to
+                        // the nearest point on the line
+                        bearingToNearestPoint = bearing(
+                            latitude,
+                            nearestPoint[0],
+                            longitude,
+                            nearestPoint[1]
+                        );
 
-                    // Update the stats
-                    stats.innerHTML = `Distance to line: ${distanceToNearestPoint.toFixed(
-                        2
-                    )}m<br />Closest point on line: ${nearestPoint[0].toFixed(
-                        4
-                    )}, ${nearestPoint[1].toFixed(4)}
+                        // Compute the bearing from the current position to
+                        // the end point of the line
+                        bearingToEndPoint = bearing(
+                            latitude,
+                            LINE_COORDS[1][0],
+                            longitude,
+                            LINE_COORDS[1][1]
+                        );
+
+                        // Update the stats
+                        stats.innerHTML = `Distance to line: ${distanceToNearestPoint.toFixed(
+                            2
+                        )}m<br />Closest point on line: ${nearestPoint[0].toFixed(
+                            4
+                        )}, ${nearestPoint[1].toFixed(4)}
                         <br />Bearing to line normal: ${bearingToNearestPoint.toFixed(
                             2
                         )}°<br />Distance to finish: ${distanceToFinish.toFixed(
-                        2
-                    )}m<br />Bearing to finish: ${bearingToEndPoint.toFixed(
-                        2
-                    )}°`;
+                            2
+                        )}m<br />Bearing to finish: ${bearingToEndPoint.toFixed(
+                            2
+                        )}°`;
+                    }
 
                     // Update the arrow
                     arrow.innerHTML = `<div>Direction to line: </div><div style="transform: rotate(${
@@ -322,8 +339,11 @@
                                 2
                             )}°`;
 
-                            if (lastPosition) {
-                                watchPositionCallback(lastPosition);
+                            if (recentPositionHistory.length > 0) {
+                                watchPositionCallback(
+                                    recentPositionHistory.at(-1),
+                                    true
+                                );
                             }
                         }
                     }
