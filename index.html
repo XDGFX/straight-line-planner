@@ -189,94 +189,81 @@
                 let bearingToNearestPoint = 0;
                 let bearingToEndPoint = 0;
 
-                const watchPositionCallback = (
-                    position,
-                    justUpdate = false
-                ) => {
-                    if (!justUpdate) {
-                        latitude = position.coords.latitude;
-                        longitude = position.coords.longitude;
-                        accuracy = position.coords.accuracy;
+                const watchPositionCallback = (position) => {
+                    latitude = position.coords.latitude;
+                    longitude = position.coords.longitude;
+                    accuracy = position.coords.accuracy;
 
-                        currentPosition.innerHTML = `Current position: ${latitude}, ${longitude}`;
+                    currentPosition.innerHTML = `Current position: ${latitude}, ${longitude}`;
 
-                        // Compute the distance to the start point, we will use
-                        // this to estimate the distance covered as a fraction
-                        // of the total distance
-                        distanceToStart = distBetween(
-                            latitude,
-                            LINE_COORDS[0][0],
-                            longitude,
-                            LINE_COORDS[0][1]
-                        );
+                    // Compute the distance to the start point, we will use
+                    // this to estimate the distance covered as a fraction
+                    // of the total distance
+                    distanceToStart = distBetween(
+                        latitude,
+                        LINE_COORDS[0][0],
+                        longitude,
+                        LINE_COORDS[0][1]
+                    );
 
-                        distanceToFinish = TOTAL_DISTANCE - distanceToStart;
+                    distanceToFinish = TOTAL_DISTANCE - distanceToStart;
 
-                        // Compute the distance covered as a fraction of the
-                        // total distance
-                        const fraction = distanceToStart / TOTAL_DISTANCE;
+                    // Compute the distance covered as a fraction of the
+                    // total distance
+                    const fraction = distanceToStart / TOTAL_DISTANCE;
 
-                        // Estimate the nearest point on the line using this
-                        // fraction
-                        const nearestPoint = intermediatePoint(
-                            LINE_COORDS[0][0],
-                            LINE_COORDS[1][0],
-                            LINE_COORDS[0][1],
-                            LINE_COORDS[1][1],
-                            fraction
-                        );
+                    // Estimate the nearest point on the line using this
+                    // fraction
+                    const nearestPoint = intermediatePoint(
+                        LINE_COORDS[0][0],
+                        LINE_COORDS[1][0],
+                        LINE_COORDS[0][1],
+                        LINE_COORDS[1][1],
+                        fraction
+                    );
 
-                        // Compute the distance between the current position
-                        // and the nearest point on the line
-                        distanceToNearestPoint = distBetween(
-                            latitude,
-                            nearestPoint[0],
-                            longitude,
-                            nearestPoint[1]
-                        );
+                    // Compute the distance between the current position
+                    // and the nearest point on the line
+                    distanceToNearestPoint = distBetween(
+                        latitude,
+                        nearestPoint[0],
+                        longitude,
+                        nearestPoint[1]
+                    );
 
-                        // Compute the bearing from the current position to
-                        // the nearest point on the line
-                        bearingToNearestPoint = bearing(
-                            latitude,
-                            nearestPoint[0],
-                            longitude,
-                            nearestPoint[1]
-                        );
+                    // Compute the bearing from the current position to
+                    // the nearest point on the line
+                    bearingToNearestPoint = bearing(
+                        latitude,
+                        nearestPoint[0],
+                        longitude,
+                        nearestPoint[1]
+                    );
 
-                        // Compute the bearing from the current position to
-                        // the end point of the line
-                        bearingToEndPoint = bearing(
-                            latitude,
-                            LINE_COORDS[1][0],
-                            longitude,
-                            LINE_COORDS[1][1]
-                        );
+                    // Compute the bearing from the current position to
+                    // the end point of the line
+                    bearingToEndPoint = bearing(
+                        latitude,
+                        LINE_COORDS[1][0],
+                        longitude,
+                        LINE_COORDS[1][1]
+                    );
 
-                        // Update the stats
-                        stats.innerHTML = `Location accuracy: ${accuracy.toFixed(
-                            2
-                        )}m (95%)<br />Distance to line: ${distanceToNearestPoint.toFixed(
-                            2
-                        )}m<br />Closest point on line: ${nearestPoint[0].toFixed(
-                            4
-                        )}, ${nearestPoint[1].toFixed(4)}
+                    // Update the stats
+                    stats.innerHTML = `Location accuracy: ${accuracy.toFixed(
+                        2
+                    )}m (95%)<br />Distance to line: ${distanceToNearestPoint.toFixed(
+                        2
+                    )}m<br />Closest point on line: ${nearestPoint[0].toFixed(
+                        4
+                    )}, ${nearestPoint[1].toFixed(4)}
                         <br />Bearing to line normal: ${bearingToNearestPoint.toFixed(
                             2
                         )}°<br />Distance to finish: ${distanceToFinish.toFixed(
-                            2
-                        )}m<br />Bearing to finish: ${bearingToEndPoint.toFixed(
-                            2
-                        )}°`;
-                    }
-
-                    // Update the arrow
-                    arrow.innerHTML = `<div>Direction to line: </div><div style="transform: rotate(${
-                        bearingToNearestPoint + heading || 0
-                    }deg); font-size:4em;">${ARROW_HTML}</div>
-                        <br /><div>Direction to finish: </div><div style="transform: rotate(${
-                            bearingToEndPoint + heading || 0
-                        }deg); font-size:4em;">${ARROW_HTML}</div>`;
+                        2
+                    )}m<br />Bearing to finish: ${bearingToEndPoint.toFixed(
+                        2
+                    )}°`;
                 };
 
                 // Get current position
@@ -301,12 +288,12 @@
                                 2
                             )}°`;
 
-                            if (recentPositionHistory.length > 0) {
-                                watchPositionCallback(
-                                    recentPositionHistory.at(-1),
-                                    true
-                                );
-                            }
+                            // Update the arrow
+                            arrow.innerHTML = `<div>Direction to line: </div><div style="transform: rotate(${
+                                bearingToNearestPoint + heading || 0
+                            }deg); font-size:4em;">${ARROW_HTML}</div><br /><div>Direction to finish: </div><div style="transform: rotate(${
+                                bearingToEndPoint + heading || 0
+                            }deg); font-size:4em;">${ARROW_HTML}</div>`;
                         }
                     }
                 );
