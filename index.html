@@ -178,12 +178,10 @@
 
                 const ARROW_HTML = "&#8593;";
 
-                const recentPositionHistory = [];
-                const RECENT_POSITION_HISTORY_LENGTH = 10;
-
                 let heading = 0;
                 let latitude = 0;
                 let longitude = 0;
+                let accuracy = 0;
 
                 let distanceToStart = 0;
                 let distanceToFinish = 0;
@@ -196,47 +194,9 @@
                     justUpdate = false
                 ) => {
                     if (!justUpdate) {
-                        // If recentPositionHistory is full, remove the oldest
-                        // position
-                        if (
-                            recentPositionHistory.length >=
-                            RECENT_POSITION_HISTORY_LENGTH
-                        ) {
-                            recentPositionHistory.shift();
-                        }
-
-                        // Add the new position to the end of the array
-                        recentPositionHistory.push(position);
-
-                        // Get the latitude and longitude as a weighted average of
-                        // the most recent positions. Weight is higher for recent
-                        // positions, and positions with lower accuracy values
-                        let latSum = 0;
-                        let lonSum = 0;
-                        let weightSum = 0;
-
-                        for (
-                            let i = 0;
-                            i < recentPositionHistory.length;
-                            i += 1
-                        ) {
-                            const weight =
-                                i *
-                                (5 /
-                                    (recentPositionHistory[i].coords.accuracy +
-                                        1));
-
-                            latSum +=
-                                recentPositionHistory[i].coords.latitude *
-                                weight;
-                            lonSum +=
-                                recentPositionHistory[i].coords.longitude *
-                                weight;
-                            weightSum += weight;
-                        }
-
-                        latitude = latSum / weightSum;
-                        longitude = lonSum / weightSum;
+                        latitude = position.coords.latitude;
+                        longitude = position.coords.longitude;
+                        accuracy = position.coords.accuracy;
 
                         currentPosition.innerHTML = `Current position: ${latitude}, ${longitude}`;
 
@@ -294,7 +254,9 @@
                         );
 
                         // Update the stats
-                        stats.innerHTML = `Distance to line: ${distanceToNearestPoint.toFixed(
+                        stats.innerHTML = `Location accuracy: ${accuracy.toFixed(
+                            2
+                        )}m (95%)<br />Distance to line: ${distanceToNearestPoint.toFixed(
                             2
                         )}m<br />Closest point on line: ${nearestPoint[0].toFixed(
                             4
